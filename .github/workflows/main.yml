@@ -12,7 +12,10 @@ on:
 
 jobs:
   register-data:
-    runs-on: ubuntu-latest
+    runs-on: 
+        - self-hosted
+        - Linux
+        - X64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
