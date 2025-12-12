@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: label_creation
+type: command
+environment: azureml:aml-preprocessing-cli:0.1.0
+display_name: label_creation
+description: "Creating labels from image paths."
+is_deterministic: true
+resources:
+    instance_count: 1 
+code: ./component_code/
+command: "python create_labels.py \
+            --path_to_data_root ${{inputs.path_to_data_root}} \
+            --label_folder ${{outputs.label_folder}} \
+            "
+
+inputs:
+  path_to_data_root:
+    type: uri_folder
+outputs:
+  label_folder:
+    type: uri_folder
