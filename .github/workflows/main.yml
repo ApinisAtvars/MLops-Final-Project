@@ -24,11 +24,10 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+    
       - name: Register Data Asset
         uses: Azure/CLI@v2.1.0
         with:
           inlineScript: |
-            az configure --defaults group=${{ secrets.RESOURCE_GROUP }} workspace=${{ secrets.WORKSPACE_NAME }} location=${{ secrets.LOCATION }}
             az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
     
