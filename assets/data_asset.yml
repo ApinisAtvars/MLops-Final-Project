@@ -1,0 +1,5 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: skin-disease-data
+description: Dataset containing skin disease images
+type: uri_folder
+path: ../Data/SkinDiseaseSmaller # SkinDiseaseSmaller is a very small portion of the dataset so that I don't have to wait an hour

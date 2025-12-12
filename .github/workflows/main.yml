@@ -1,1 +1,30 @@
+name: Data Preprocessing
 
+on:
+    push:
+        branches:
+        - main
+    pull_request:
+        branches:
+        - main
+    
+    workflow_dispatch:
+
+jobs:
+  register-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure -- Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML CLI
+        run: az extension add -n ml -y
+
+      - name: Register Data Asset
+        run: az ml data create -f Data/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
+    
