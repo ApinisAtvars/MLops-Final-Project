@@ -25,9 +25,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install Azure ML CLI
-        run: az extension add -n ml -y
-
       - name: Register Data Asset
-        run: az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
+        uses: Azure/CLI@v2.1.0
+        with:
+          inlineScript: |
+            az extension add --name ml
+            az configure --defaults group=${{ secrets.RESOURCE_GROUP }} workspace=${{ secrets.WORKSPACE_NAME }} location=${{ secrets.LOCATION }}
+            az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
     
