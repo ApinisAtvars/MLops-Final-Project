@@ -24,7 +24,8 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
+      
+      # Path needs to be set to absolute path of the dataset from my WSL
       - name: Register Data Asset
         run: |
           az extension remove -n ml || true
@@ -34,4 +35,12 @@ jobs:
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --name skin-disease-data-${{ github.sha }} \
             --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
-    
+      
+      - name: Create compute instance if not exists
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      
