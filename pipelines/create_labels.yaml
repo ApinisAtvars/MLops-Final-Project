@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+
+type: pipeline
+name: create-labels-cli
+display_name: Create Labels using CLI
+experiment_name: create_labels_experiment
+
+inputs:
+  path_to_data_root:
+    type: uri_folder
+
+outputs:
+  label_folder:
+    mode: upload
+
+settings:
+  default_compute: azureml:cli-created-machine
+
+jobs:
+  create_labels_job:
+    type: command
+    component: ../components/label_creation.yaml
+    inputs:
+      path_to_data_root: ${{inputs.path_to_data_root}}
+    outputs:
+      label_folder: ${{outputs.label_folder}}
+  
