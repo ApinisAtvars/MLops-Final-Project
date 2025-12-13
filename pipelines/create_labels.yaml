@@ -21,7 +21,7 @@ jobs:
     type: command
     component: ../components/label_creation.yaml
     inputs:
-      path_to_data_root: ${{inputs.path_to_data_root}}
+      path_to_data_root: ${{parent.inputs.path_to_data_root}}
     outputs:
-      label_folder: ${{outputs.label_folder}}
+      label_folder: ${{parent.outputs.label_folder}}
   
