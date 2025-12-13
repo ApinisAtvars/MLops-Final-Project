@@ -124,5 +124,5 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --stream \
-            --set name=train-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:create-labels-cli-${{ github.sha }}-${{ github.run_id }}:outputs.label_folder inputs.labels_folder.type=uri_folder
+            --set name=train-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
           
