@@ -26,9 +26,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
     
       - name: Register Data Asset
-        uses: azure/CLI@v2.1.0
-        with:
-          inlineScript: |
-            az extension add --name ml -y
-            az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
+        run: |
+          az extension add -n ml -y
+          az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
     
