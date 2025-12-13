@@ -24,12 +24,15 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install az ml extension
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
       
       # Path needs to be set to absolute path of the dataset from my WSL
       - name: Register Data Asset
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
           az ml data create -f assets/data_asset.yml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
@@ -47,8 +50,6 @@ jobs:
 
       - name: Start compute instance if stopped
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
           STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
           if [[ $STATUS == "Stopped" ]]; then
             echo "Compute instance is stopped. Starting..."
@@ -62,9 +63,7 @@ jobs:
       
       - name: Set up environment
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
-          az ml environment create --file ./environments/python_environments/aml-preprocessing-cli.yaml \
+          az ml environment create --file ./environments/python_environments/preprocessing.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --name aml-preprocessing-cli \
@@ -72,8 +71,6 @@ jobs:
       
       - name: Create component
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
           az ml component create --file ./components/label_creation.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
@@ -81,8 +78,6 @@ jobs:
       
       - name: Submit pipeline job
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
           az ml job create --file ./pipelines/create_labels.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
