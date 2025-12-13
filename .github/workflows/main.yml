@@ -33,16 +33,17 @@ jobs:
       #     az ml data create -f assets/data_asset.yml \
       #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
       #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-      #       --name skin-disease-data-${{ github.sha }} \
+      #       --name skin-disease-data \
+              # --version ${{ github.sha }} \
       #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
       
-      - name: Create compute instance if not exists
-        run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
-          az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      # - name: Create compute instance if not exists
+      #   run: |
+      #     az extension remove -n ml || true
+      #     az extension add -n ml -y
+      #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
+      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
+      #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
 
       - name: Start compute instance if stopped
         run: |
@@ -69,4 +70,24 @@ jobs:
             --name aml-preprocessing-cli \
             --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
       
+      - name: Create component
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml component create --file ./components/label_creation.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.sha }}
+      
+      - name: Submit pipeline job
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml job create --file ./pipelines/create_labels.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --stream \
+            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} \ 
+            --set inputs.path_to_data_root=azureml:skin-disease-data:latest
+        
       
