@@ -34,7 +34,7 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --name skin-disease-data \
-              --version ${{ github.sha }} \
+              --version ${{ github.run_id }} \
             --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
       
       # - name: Create compute instance if not exists
@@ -44,7 +44,6 @@ jobs:
       #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
       #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
       #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
-      
 
       - name: Start compute instance if stopped
         run: |
@@ -78,7 +77,7 @@ jobs:
           az ml component create --file ./components/label_creation.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-            --version ${{ github.sha }}
+            --version ${{ github.run_id }}
       
       - name: Submit pipeline job
         run: |
