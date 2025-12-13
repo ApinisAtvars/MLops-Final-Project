@@ -32,9 +32,11 @@ def main():
             class_path = os.path.join(train_dir, class_folder)
             if os.path.isdir(class_path):
                 for image_name in os.listdir(class_path):
-                    image_path = os.path.join(class_path, image_name)
-                    if os.path.isfile(image_path):
-                        training_datapaths.append((image_path, class_folder))
+                    full_image_path = os.path.join(class_path, image_name)
+                    if os.path.isfile(full_image_path):
+                        # Store relative path instead of absolute path
+                        rel_path = os.path.relpath(full_image_path, args.path_to_data_root)
+                        training_datapaths.append((rel_path, class_folder))
     
     # Process test data
     test_dir = os.path.join(args.path_to_data_root, "test")
@@ -43,9 +45,11 @@ def main():
             class_path = os.path.join(test_dir, class_folder)
             if os.path.isdir(class_path):
                 for image_name in os.listdir(class_path):
-                    image_path = os.path.join(class_path, image_name)
-                    if os.path.isfile(image_path):
-                        testing_datapaths.append((image_path, class_folder))
+                    full_image_path = os.path.join(class_path, image_name)
+                    if os.path.isfile(full_image_path):
+                        # Store relative path instead of absolute path
+                        rel_path = os.path.relpath(full_image_path, args.path_to_data_root)
+                        testing_datapaths.append((rel_path, class_folder))
 
     # Shuffle
     random.shuffle(training_datapaths)
