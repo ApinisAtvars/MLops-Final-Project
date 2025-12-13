@@ -39,8 +39,9 @@ def load_and_preprocess_images(df: pd.DataFrame, data_root: str):
             labels_encoded.append(0)
     
     images_array = np.array(images)
+    labels_encoded = np.array(labels_encoded, dtype=np.float32)
 
-    return images_array, labels 
+    return images_array, labels_encoded 
 
 def create_model():
     base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
