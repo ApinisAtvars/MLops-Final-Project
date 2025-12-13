@@ -11,84 +11,7 @@ on:
     workflow_dispatch:
 
 jobs:
-  register-data:
-    runs-on: 
-        - self-hosted
-        - Linux
-        - X64
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Azure -- Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # - name: Install az ml extension
-      #   run: |
-      #     az extension remove -n ml || true
-      #     az extension add -n ml -y
-      
-      # Path needs to be set to absolute path of the dataset from my WSL
-      # - name: Register Data Asset
-      #   run: |
-      #     az ml data create -f assets/data_asset.yml \
-      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-      #       --name skin-disease-data \
-      #         --version ${{ github.run_id }} \
-      #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
-      
-      # - name: Create compute instance if not exists
-      #   run: |
-      #     az extension remove -n ml || true
-      #     az extension add -n ml -y
-      #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
-      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
-
-      # - name: Start compute instance if stopped
-      #   run: |
-      #     STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
-      #     if [[ $STATUS == "Stopped" ]]; then
-      #       echo "Compute instance is stopped. Starting..."
-      #       az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
-      #     elif [[ $STATUS == "Running" ]]; then
-      #       echo "Compute instance is already running."
-      #     else
-      #       echo "Compute instance is in an unexpected state: $STATUS"
-      #       exit 1
-      #     fi
-      
-      - name: Set up environment
-        run: |
-          az ml environment create --conda-file ./environments/python_environments/preprocessing.yaml \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-            --name aml-preprocessing-cli \
-            --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
-      
-      - name: Create component
-        run: |
-          az ml component create --file ./components/label_creation.yaml \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-            --version ${{ github.run_id }}
-      
-      - name: Submit pipeline job
-        run: |
-          az ml job create --file ./pipelines/create_labels.yaml \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-            --stream \
-            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder
-    
-
-# --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ github.run_id }}
-
-  # train-model:
-  #   needs: register-data
+  # register-data:
   #   runs-on: 
   #       - self-hosted
   #       - Linux
@@ -102,14 +25,103 @@ jobs:
   #       with:
   #         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  #     - name: Create environment
+  #     # - name: Install az ml extension
+  #     #   run: |
+  #     #     az extension remove -n ml || true
+  #     #     az extension add -n ml -y
+      
+  #     # Path needs to be set to absolute path of the dataset from my WSL
+  #     # - name: Register Data Asset
+  #     #   run: |
+  #     #     az ml data create -f assets/data_asset.yml \
+  #     #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
+  #     #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+  #     #       --name skin-disease-data \
+  #     #         --version ${{ github.run_id }} \
+  #     #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
+      
+  #     # - name: Create compute instance if not exists
+  #     #   run: |
+  #     #     az extension remove -n ml || true
+  #     #     az extension add -n ml -y
+  #     #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
+  #     #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
+  #     #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
+
+  #     # - name: Start compute instance if stopped
+  #     #   run: |
+  #     #     STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
+  #     #     if [[ $STATUS == "Stopped" ]]; then
+  #     #       echo "Compute instance is stopped. Starting..."
+  #     #       az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
+  #     #     elif [[ $STATUS == "Running" ]]; then
+  #     #       echo "Compute instance is already running."
+  #     #     else
+  #     #       echo "Compute instance is in an unexpected state: $STATUS"
+  #     #       exit 1
+  #     #     fi
+      
+  #     - name: Set up environment
   #       run: |
-  #         az ml environment create --conda-file ./environments/python_environments/training.yaml \
+  #         az ml environment create --conda-file ./environments/python_environments/preprocessing.yaml \
   #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
   #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --name aml-training-cli \
+  #           --name aml-preprocessing-cli \
   #           --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
       
   #     - name: Create component
+  #       run: |
+  #         az ml component create --file ./components/label_creation.yaml \
+  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
+  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+  #           --version ${{ github.run_id }}
+      
+  #     - name: Submit pipeline job
+  #       run: |
+  #         az ml job create --file ./pipelines/create_labels.yaml \
+  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
+  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+  #           --stream \
+  #           --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder
+    
 
+# --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ github.run_id }}
+
+  train-model:
+    # needs: register-data
+    runs-on: 
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure -- Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create environment
+        run: |
+          az ml environment create --conda-file ./environments/python_environments/training.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --name aml-training-cli \
+            --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
+      
+      - name: Create component
+        run: |
+          az ml component create --file ./components/training.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.run_id }}
+      
+      - name: Submit training pipeline job
+        run: |
+          az ml job create --file ./pipelines/train.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --stream \
+            --set name=train-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:create-labels-cli-${{ github.sha }}-${{ github.run_id }}:outputs.label_folder inputs.labels_folder.type=uri_folder
           

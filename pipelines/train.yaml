@@ -1,0 +1,29 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+
+type: pipeline
+name: train-pipeline-cli
+display_name: Train Pipeline using CLI
+experiment_name: train_pipeline_experiment
+inputs:
+  path_to_data_root:
+    type: uri_folder
+    mode: ro_mount
+  labels_folder:
+    type: uri_folder
+    mode: ro_mount
+outputs:
+  output_model:
+    mode: upload
+
+settings:
+  default_compute: azureml:cli-created-machine
+
+jobs:
+  training_job:
+    type: command
+    component: ../components/training.yaml
+    inputs:
+      input_folder: ${{parent.inputs.path_to_data_root}}
+      labels_folder: ${{parent.inputs.labels_folder}}
+    outputs:
+      output_model: ${{parent.outputs.output_model}}

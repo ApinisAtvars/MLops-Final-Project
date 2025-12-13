@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: training
+type: command
+environment: azureml:aml-training-cli:latest
+display_name: training_cli
+description: "Training the model using cli created component"
+is_deterministic: true
+resources:
+    instance_count: 1 # Number of nodes to use
+code: ./component_code/
+command: "python train.py \
+            --input_folder ${{inputs.input_folder}} \
+            --labels_folder ${{inputs.labels_folder}} \
+            --output_folder ${{outputs.output_model}}"
+inputs:
+  input_folder:
+    type: uri_folder
+  labels_folder:
+    type: uri_folder
+
+outputs:  
+  output_model:
+    type: uri_folder
