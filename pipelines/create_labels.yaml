@@ -8,6 +8,7 @@ experiment_name: create_labels_experiment
 inputs:
   path_to_data_root:
     type: uri_folder
+    mode: ro_mount
 
 outputs:
   label_folder:

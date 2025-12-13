@@ -82,6 +82,8 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --stream \
-            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:latest
-        
+            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:20194084614
+
+# --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ github.run_id }}
+
       
