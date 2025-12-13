@@ -26,16 +26,16 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       
       # Path needs to be set to absolute path of the dataset from my WSL
-      # - name: Register Data Asset
-      #   run: |
-      #     az extension remove -n ml || true
-      #     az extension add -n ml -y
-      #     az ml data create -f assets/data_asset.yml \
-      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-      #       --name skin-disease-data \
-              # --version ${{ github.sha }} \
-      #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
+      - name: Register Data Asset
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml data create -f assets/data_asset.yml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --name skin-disease-data \
+              --version ${{ github.sha }} \
+            --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
       
       # - name: Create compute instance if not exists
       #   run: |
