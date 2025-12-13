@@ -44,6 +44,7 @@ jobs:
       #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
       #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
       #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      
 
       - name: Start compute instance if stopped
         run: |
