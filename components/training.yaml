@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 
 name: training
 type: command
-environment: azureml:aml-training-cli:latest
+environment: azureml:aml-training-cli@latest
 display_name: training_cli
 description: "Training the model using cli created component"
 is_deterministic: true
