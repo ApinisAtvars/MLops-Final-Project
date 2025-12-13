@@ -25,20 +25,20 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install az ml extension
-        run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
+      # - name: Install az ml extension
+      #   run: |
+      #     az extension remove -n ml || true
+      #     az extension add -n ml -y
       
       # Path needs to be set to absolute path of the dataset from my WSL
-      - name: Register Data Asset
-        run: |
-          az ml data create -f assets/data_asset.yml \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-            --name skin-disease-data \
-              --version ${{ github.run_id }} \
-            --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
+      # - name: Register Data Asset
+      #   run: |
+      #     az ml data create -f assets/data_asset.yml \
+      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
+      #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+      #       --name skin-disease-data \
+      #         --version ${{ github.run_id }} \
+      #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
       
       # - name: Create compute instance if not exists
       #   run: |
@@ -48,22 +48,22 @@ jobs:
       #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
       #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
 
-      - name: Start compute instance if stopped
-        run: |
-          STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
-          if [[ $STATUS == "Stopped" ]]; then
-            echo "Compute instance is stopped. Starting..."
-            az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
-          elif [[ $STATUS == "Running" ]]; then
-            echo "Compute instance is already running."
-          else
-            echo "Compute instance is in an unexpected state: $STATUS"
-            exit 1
-          fi
+      # - name: Start compute instance if stopped
+      #   run: |
+      #     STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
+      #     if [[ $STATUS == "Stopped" ]]; then
+      #       echo "Compute instance is stopped. Starting..."
+      #       az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      #     elif [[ $STATUS == "Running" ]]; then
+      #       echo "Compute instance is already running."
+      #     else
+      #       echo "Compute instance is in an unexpected state: $STATUS"
+      #       exit 1
+      #     fi
       
       - name: Set up environment
         run: |
-          az ml environment create --file ./environments/python_environments/preprocessing.yaml \
+          az ml environment create --conda-file ./environments/python_environments/preprocessing.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --name aml-preprocessing-cli \
