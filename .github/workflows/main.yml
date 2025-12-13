@@ -87,6 +87,7 @@ jobs:
 
 # --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ github.run_id }}
 
+
   train-model:
     # needs: register-data
     runs-on: 
