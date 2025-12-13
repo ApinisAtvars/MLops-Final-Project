@@ -27,6 +27,7 @@ jobs:
     
       - name: Register Data Asset
         run: |
+          az extension remove -n ml || true
           az extension add -n ml -y
           az ml data create -f assets/data_asset.yml --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --name skin-disease-data-${{ github.sha }}
     
