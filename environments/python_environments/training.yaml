@@ -1,4 +1,4 @@
-name: training-env
+name: aml-training-cli
 channels:
   - conda-forge
 dependencies:
@@ -12,4 +12,5 @@ dependencies:
     - azureml-core==1.60.0
     - azureml-mlflow==1.60.0
     - pandas==2.2.3
+    - pillow
     - tensorflow==2.19.0
