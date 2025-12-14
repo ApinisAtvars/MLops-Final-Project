@@ -134,7 +134,7 @@ jobs:
   #           --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
 
   build-image:
-    needs: train-model
+    # needs: train-model
     runs-on: 
       - self-hosted
       - Linux
@@ -151,10 +151,10 @@ jobs:
       - name: Install az ml extension
         run: |
           az extension add -n ml -y
-
+# az ml job download --name train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }}
       - name: Download model
         run: |
-          az ml job download --name train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} \
+           az ml job download --name train-test-pipeline-cli-a2964be706a60f6be31f1c5d2d04d0e8a68450c6-20209764366 \
             --output-name output_model \
             --download-path ./model_download \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
