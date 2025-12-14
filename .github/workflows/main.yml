@@ -111,18 +111,25 @@ jobs:
             --name aml-training-cli \
             --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
       
-      - name: Create component
+      - name: Create training component
         run: |
           az ml component create --file ./components/training.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --version ${{ github.run_id }}
-      
-      - name: Submit training pipeline job
+        
+      - name: Create testing component
         run: |
-          az ml job create --file ./pipelines/train.yaml \
+          az ml component create --file ./components/testing.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.run_id }}
+      
+      - name: Submit training and testing pipeline job
+        run: |
+          az ml job create --file ./pipelines/train_test.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --stream \
-            --set name=train-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
+            --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
           

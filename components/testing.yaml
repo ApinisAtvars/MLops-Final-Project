@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: testing
+type: command
+environment: azureml:aml-training-cli@latest
+display_name: testing_cli
+description: "Testing the model using cli created component"
+is_deterministic: true
+resources:
+    instance_count: 1 # Number of nodes to use
+code: ./component_code/
+command: "python test.py \
+            --input_folder ${{inputs.input_folder}} \
+            --labels_folder ${{inputs.labels_folder}} \
+            --model_folder ${{inputs.model_folder}}"
+inputs:
+  input_folder:
+    type: uri_folder
+  labels_folder:
+    type: uri_folder
+  model_folder:
+    type: uri_folder

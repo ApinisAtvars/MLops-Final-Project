@@ -27,3 +27,11 @@ jobs:
       labels_folder: ${{parent.inputs.labels_folder}}
     outputs:
       output_model: ${{parent.outputs.output_model}}
+
+  testing_job:
+    type: command
+    component: ../components/testing.yaml
+    inputs:
+      input_folder: ${{parent.inputs.path_to_data_root}}
+      labels_folder: ${{parent.inputs.labels_folder}}
+      model_folder: ${{parent.jobs.training_job.outputs.output_model}}
