@@ -11,19 +11,19 @@ on:
     workflow_dispatch:
 
 jobs:
-  # register-data:
-  #   runs-on: 
-  #       - self-hosted
-  #       - Linux
-  #       - X64
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  register-data:
+    runs-on: 
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Azure -- Login
-  #       uses: Azure/login@v1
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure -- Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
   #     # - name: Install az ml extension
   #     #   run: |
@@ -40,13 +40,13 @@ jobs:
   #     #         --version ${{ github.run_id }} \
   #     #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
       
-  #     # - name: Create compute instance if not exists
-  #     #   run: |
-  #     #     az extension remove -n ml || true
-  #     #     az extension add -n ml -y
-  #     #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
-  #     #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #     #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      - name: Create compute instance if not exists
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }}
 
   #     # - name: Start compute instance if stopped
   #     #   run: |
@@ -89,7 +89,7 @@ jobs:
 
 
   train-model:
-    # needs: register-data
+    needs: register-data
     runs-on: 
         - self-hosted
         - Linux
