@@ -154,7 +154,7 @@ jobs:
 # az ml job download --name train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }}
       - name: Download model
         run: |
-           az ml job download --name train-test-pipeline-cli-a2964be706a60f6be31f1c5d2d04d0e8a68450c6-20209764366 \
+          az ml job download --name train-test-pipeline-cli-a2964be706a60f6be31f1c5d2d04d0e8a68450c6-20209764366 \
             --output-name output_model \
             --download-path ./model_download \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
