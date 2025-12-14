@@ -193,6 +193,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Configure kubectl
+        run: |
+          CLUSTER_NAME=$(k3d cluster list --no-headers | awk '{print $1}' | head -n 1)
+          if [ -z "$CLUSTER_NAME" ]; then
+             echo "No k3d cluster found. Using default 'k3s-default'"
+             CLUSTER_NAME="k3s-default"
+          fi
+          echo "Retrieving kubeconfig for cluster: $CLUSTER_NAME"
+          k3d kubeconfig get $CLUSTER_NAME > kubeconfig.yaml
+          echo "KUBECONFIG=$(pwd)/kubeconfig.yaml" >> $GITHUB_ENV
+
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f kubernetes/deployment.yaml
