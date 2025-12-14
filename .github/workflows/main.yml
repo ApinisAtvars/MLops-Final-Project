@@ -134,8 +134,11 @@ jobs:
   #           --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
 
   build-image:
-    # needs: train-model
-    runs-on: ubuntu-latest
+    needs: train-model
+    runs-on: 
+      - self-hosted
+      - Linux
+      - X64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -150,9 +153,8 @@ jobs:
           az extension add -n ml -y
 
       - name: Download model
-      # az ml job download --name train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} \
         run: |
-          az ml job download --name train-test-pipeline-cli-a2964be706a60f6be31f1c5d2d04d0e8a68450c6-20209764366 \
+          az ml job download --name train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} \
             --output-name output_model \
             --download-path ./model_download \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
@@ -170,4 +172,29 @@ jobs:
         run: |
           cd app
           docker build -t skin-disease-prediction:latest .
+
+      - name: Import image to k3d
+        run: |
+          CLUSTER_NAME=$(k3d cluster list --no-headers | awk '{print $1}' | head -n 1)
+          if [ -z "$CLUSTER_NAME" ]; then
+             echo "No k3d cluster found. Using default 'k3s-default'"
+             CLUSTER_NAME="k3s-default"
+          fi
+          echo "Importing image to cluster: $CLUSTER_NAME"
+          k3d image import skin-disease-prediction:latest -c $CLUSTER_NAME
+
+  deploy:
+    needs: build-image
+    runs-on: 
+      - self-hosted
+      - Linux
+      - X64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f kubernetes/deployment.yaml
+          kubectl apply -f kubernetes/service.yaml
           

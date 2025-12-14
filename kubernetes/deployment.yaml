@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skin-disease-prediction
+  labels:
+    app: skin-disease-prediction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skin-disease-prediction
+  template:
+    metadata:
+      labels:
+        app: skin-disease-prediction
+    spec:
+      containers:
+      - name: skin-disease-prediction
+        image: skin-disease-prediction:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
