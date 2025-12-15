@@ -26,11 +26,6 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Install az ml extension
-        run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
       
       - name: Check for Data Changes
         id: check-data
@@ -72,8 +67,6 @@ jobs:
       
       - name: Create compute instance if not exists
         run: |
-          az extension remove -n ml || true
-          az extension add -n ml -y
           az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }}
