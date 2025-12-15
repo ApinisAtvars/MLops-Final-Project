@@ -11,130 +11,230 @@ on:
     workflow_dispatch:
 
 jobs:
-  # register-data:
-  #   runs-on: 
-  #       - self-hosted
-  #       - Linux
-  #       - X64
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  register-data:
+    runs-on: 
+        - self-hosted
+        - Linux
+        - X64
+    outputs:
+      data_version: ${{ steps.check-data.outputs.data_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Azure -- Login
-  #       uses: Azure/login@v1
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure -- Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  #     # - name: Install az ml extension
-  #     #   run: |
-  #     #     az extension remove -n ml || true
-  #     #     az extension add -n ml -y
+      - name: Install az ml extension
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
       
-  #     # Path needs to be set to absolute path of the dataset from my WSL
-  #     # - name: Register Data Asset
-  #     #   run: |
-  #     #     az ml data create -f assets/data_asset.yml \
-  #     #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #     #       --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #     #       --name skin-disease-data \
-  #     #         --version ${{ github.run_id }} \
-  #     #       --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller
-      
-      # - name: Create compute instance if not exists
-      #   run: |
-      #     az extension remove -n ml || true
-      #     az extension add -n ml -y
-      #     az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
-      #       --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      #       --workspace-name ${{ secrets.WORKSPACE_NAME }}
+      - name: Check for Data Changes
+        id: check-data
+        run: |
+          DATA_PATH="/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller"
+          
+          # Calculate hash of the data directory
+          CURRENT_HASH=$(find "$DATA_PATH" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
+          echo "Current Data Hash: $CURRENT_HASH"
+          
+          # Get the latest version and its hash tag from Azure ML
+          LATEST_HASH=$(az ml data list --name skin-disease-data --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "max_by([], &creation_context.created_at).tags.data_hash" -o tsv)
+          LATEST_VERSION=$(az ml data list --name skin-disease-data --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "max_by([], &creation_context.created_at).version" -o tsv)
+          
+          echo "Latest Data Hash: $LATEST_HASH"
+          echo "Latest Data Version: $LATEST_VERSION"
+          
+          if [ "$CURRENT_HASH" == "$LATEST_HASH" ] && [ -n "$LATEST_VERSION" ]; then
+            echo "Data has not changed."
+            echo "data_changed=false" >> $GITHUB_OUTPUT
+            echo "data_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Data has changed or no previous version found."
+            echo "data_changed=true" >> $GITHUB_OUTPUT
+            echo "data_version=${{ github.run_id }}" >> $GITHUB_OUTPUT
+            echo "current_hash=$CURRENT_HASH" >> $GITHUB_OUTPUT
+          fi
 
-  #     # - name: Start compute instance if stopped
-  #     #   run: |
-  #     #     STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
-  #     #     if [[ $STATUS == "Stopped" ]]; then
-  #     #       echo "Compute instance is stopped. Starting..."
-  #     #       az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
-  #     #     elif [[ $STATUS == "Running" ]]; then
-  #     #       echo "Compute instance is already running."
-  #     #     else
-  #     #       echo "Compute instance is in an unexpected state: $STATUS"
-  #     #       exit 1
-  #     #     fi
+      # Path needs to be set to absolute path of the dataset from my WSL
+      - name: Register Data Asset
+        if: steps.check-data.outputs.data_changed == 'true'
+        run: |
+          az ml data create -f assets/data_asset.yml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --name skin-disease-data \
+              --version ${{ github.run_id }} \
+            --set path=/mnt/c/Users/Atvar/Desktop/SEM5/MLOps/MLops-Final-Project/Data/SkinDiseaseSmaller tags.data_hash=${{ steps.check-data.outputs.current_hash }}
       
-  #     - name: Set up environment
-  #       run: |
-  #         az ml environment create --conda-file ./environments/python_environments/preprocessing.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --name aml-preprocessing-cli \
-  #           --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
+      - name: Create compute instance if not exists
+        run: |
+          az extension remove -n ml || true
+          az extension add -n ml -y
+          az ml compute create --file ./environments/preprocessing_compute_instance.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }}
+
+      - name: Start compute instance if stopped
+        run: |
+          STATUS=$(az ml compute show --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "state" -o tsv)
+          if [[ $STATUS == "Stopped" ]]; then
+            echo "Compute instance is stopped. Starting..."
+            az ml compute start --name cli-created-machine --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }}
+          elif [[ $STATUS == "Running" ]]; then
+            echo "Compute instance is already running."
+          else
+            echo "Compute instance is in an unexpected state: $STATUS"
+            exit 1
+          fi
       
-  #     - name: Create component
-  #       run: |
-  #         az ml component create --file ./components/label_creation.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --version ${{ github.run_id }}
+      - name: Set up environment
+        run: |
+          az ml environment create --conda-file ./environments/python_environments/preprocessing.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --name aml-preprocessing-cli \
+            --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
       
-  #     - name: Submit pipeline job
-  #       run: |
-  #         az ml job create --file ./pipelines/create_labels.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --stream \
-  #           --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder
+      - name: Check Label Component Changes
+        id: check-label-component
+        run: |
+          COMPONENT_YAML="components/label_creation.yaml"
+          CODE_DIR="components/component_code"
+          
+          # Calculate hash
+          YAML_HASH=$(sha256sum "$COMPONENT_YAML" | awk '{print $1}')
+          CODE_HASH=$(find "$CODE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
+          CURRENT_HASH=$(echo "$YAML_HASH$CODE_HASH" | sha256sum | awk '{print $1}')
+          echo "Current Component Hash: $CURRENT_HASH"
+          
+          # Get latest hash from Azure ML
+          LATEST_HASH=$(az ml component list --name label_creation --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "max_by([], &creation_context.created_at).tags.content_hash" -o tsv)
+          echo "Latest Component Hash: $LATEST_HASH"
+          
+          if [ "$CURRENT_HASH" == "$LATEST_HASH" ]; then
+            echo "Component has not changed."
+            echo "component_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Component has changed."
+            echo "component_changed=true" >> $GITHUB_OUTPUT
+            echo "current_hash=$CURRENT_HASH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create component
+        if: steps.check-label-component.outputs.component_changed == 'true'
+        run: |
+          az ml component create --file ./components/label_creation.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.run_id }} \
+            --set tags.content_hash=${{ steps.check-label-component.outputs.current_hash }}
+      
+      - name: Submit pipeline job
+        run: |
+          az ml job create --file ./pipelines/create_labels.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --stream \
+            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ steps.check-data.outputs.data_version }} inputs.path_to_data_root.type=uri_folder
+            
     
 
-# --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ github.run_id }}
+# --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder
 
 
-  # train-model:
-  #   # needs: register-data
-  #   runs-on: 
-  #       - self-hosted
-  #       - Linux
-  #       - X64
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  train-model:
+    needs: register-data
+    runs-on: 
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Azure -- Login
-  #       uses: Azure/login@v1
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure -- Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  #     - name: Create environment
-  #       run: |
-  #         az ml environment create --conda-file ./environments/python_environments/training.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --name aml-training-cli \
-  #           --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
+      - name: Create environment
+        run: |
+          az ml environment create --conda-file ./environments/python_environments/training.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --name aml-training-cli \
+            --image "mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest"
       
-  #     - name: Create training component
-  #       run: |
-  #         az ml component create --file ./components/training.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --version ${{ github.run_id }}
+      - name: Check Training Component Changes
+        id: check-training-component
+        run: |
+          COMPONENT_YAML="components/training.yaml"
+          CODE_DIR="components/component_code"
+          
+          YAML_HASH=$(sha256sum "$COMPONENT_YAML" | awk '{print $1}')
+          CODE_HASH=$(find "$CODE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
+          CURRENT_HASH=$(echo "$YAML_HASH$CODE_HASH" | sha256sum | awk '{print $1}')
+          
+          LATEST_HASH=$(az ml component list --name training --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "max_by([], &creation_context.created_at).tags.content_hash" -o tsv)
+          
+          if [ "$CURRENT_HASH" == "$LATEST_HASH" ]; then
+            echo "training_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "training_changed=true" >> $GITHUB_OUTPUT
+            echo "current_hash=$CURRENT_HASH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create training component
+        if: steps.check-training-component.outputs.training_changed == 'true'
+        run: |
+          az ml component create --file ./components/training.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.run_id }} \
+            --set tags.content_hash=${{ steps.check-training-component.outputs.current_hash }}
         
-  #     - name: Create testing component
-  #       run: |
-  #         az ml component create --file ./components/testing.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --version ${{ github.run_id }}
+      - name: Check Testing Component Changes
+        id: check-testing-component
+        run: |
+          COMPONENT_YAML="components/testing.yaml"
+          CODE_DIR="components/component_code"
+          
+          YAML_HASH=$(sha256sum "$COMPONENT_YAML" | awk '{print $1}')
+          CODE_HASH=$(find "$CODE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
+          CURRENT_HASH=$(echo "$YAML_HASH$CODE_HASH" | sha256sum | awk '{print $1}')
+          
+          LATEST_HASH=$(az ml component list --name testing --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.WORKSPACE_NAME }} --query "max_by([], &creation_context.created_at).tags.content_hash" -o tsv)
+          
+          if [ "$CURRENT_HASH" == "$LATEST_HASH" ]; then
+            echo "testing_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "testing_changed=true" >> $GITHUB_OUTPUT
+            echo "current_hash=$CURRENT_HASH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create testing component
+        if: steps.check-testing-component.outputs.testing_changed == 'true'
+        run: |
+          az ml component create --file ./components/testing.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --version ${{ github.run_id }} \
+            --set tags.content_hash=${{ steps.check-testing-component.outputs.current_hash }}
       
-  #     - name: Submit training and testing pipeline job
-  #       run: |
-  #         az ml job create --file ./pipelines/train_test.yaml \
-  #           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-  #           --workspace-name ${{ secrets.WORKSPACE_NAME }} \
-  #           --stream \
-  #           --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:20194084614 inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
+      - name: Submit training and testing pipeline job
+        run: |
+          az ml job create --file ./pipelines/train_test.yaml \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --workspace-name ${{ secrets.WORKSPACE_NAME }} \
+            --stream \
+            --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:${{ needs.register-data.outputs.data_version }} inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
 
   build-image:
-    # needs: train-model
+    needs: train-model
     runs-on: 
       - self-hosted
       - Linux
