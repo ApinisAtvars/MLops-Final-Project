@@ -139,7 +139,7 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --stream \
-            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ steps.check-data.outputs.data_version }} inputs.path_to_data_root.type=uri_folder
+            --set name=create-labels-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ steps.check-data.outputs.data_version }}
             
     
 
@@ -231,7 +231,7 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --workspace-name ${{ secrets.WORKSPACE_NAME }} \
             --stream \
-            --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root.path=azureml:skin-disease-data:${{ needs.register-data.outputs.data_version }} inputs.path_to_data_root.type=uri_folder inputs.labels_folder.path=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1 inputs.labels_folder.type=uri_folder
+            --set name=train-test-pipeline-cli-${{ github.sha }}-${{ github.run_id }} inputs.path_to_data_root=azureml:skin-disease-data:${{ needs.register-data.outputs.data_version }} inputs.labels_folder=azureml:azureml_49298ffe-4d17-4250-b24e-683d821da6ba_output_data_label_folder:1
 
   build-image:
     needs: train-model
